@@ -65,25 +65,44 @@ let cursos = [
     updated_at: new Date(),
   }
 ];
+let cart = [];
 
 // Rutas
 app.get("/", (req, res) => {
   res.send("🎉 API REST en Express funcionando!");
 });
 
+// Obtener datos del carrito
+app.get("/api/cart", (req, res) => {
+  res.json(cart);
+});
+
+// Agregar curso al carrito
+app.post("/api/cart", (req, res) => {
+  const { id } = req.body;
+  const curso = cursos.find((c) => c.id == id);
+  console.log(curso);
+  if (curso) {
+    cart.push(curso);
+    res.status(201).json(curso);
+  } else {
+    res.status(404).json({ error: "Curso no encontrado" });
+  }
+});
+
 // Obtener todos los cursos
-app.get("/cursos", (req, res) => {
+app.get("/api/cursos", (req, res) => {
   res.json(cursos);
 });
 
 // Obtener curso por ID
-app.get("/cursos/:id", (req, res) => {
+app.get("/api/cursos/:id", (req, res) => {
   const curso = cursos.find((c) => c.id == req.params.id);
   curso ? res.json(curso) : res.status(404).json({ error: "Curso no encontrado" });
 });
 
 // Agregar nuevo curso
-app.post("/cursos", (req, res) => {
+app.post("/api/cursos", (req, res) => {
   const { nombre, instructor, precio } = req.body;
   const nuevoCurso = { id: cursos.length + 1, nombre, instructor, precio };
   cursos.push(nuevoCurso);
@@ -91,7 +110,7 @@ app.post("/cursos", (req, res) => {
 });
 
 // Actualizar curso
-app.put("/cursos/:id", (req, res) => {
+app.put("/api/cursos/:id", (req, res) => {
   const { nombre, instructor, precio } = req.body;
   const curso = cursos.find((c) => c.id == req.params.id);
   if (curso) {
@@ -105,7 +124,7 @@ app.put("/cursos/:id", (req, res) => {
 });
 
 // Eliminar curso
-app.delete("/cursos/:id", (req, res) => {
+app.delete("/api/cursos/:id", (req, res) => {
   cursos = cursos.filter((c) => c.id != req.params.id);
   res.json({ message: "Curso eliminado" });
 });
