@@ -1,0 +1,33 @@
+Endpoints extraidos:
+
+// Carrito
+GET     /api/cart               // Devuelve el carrito actual (array de cursos en carrito)
+POST    /api/cart               // Agrega un curso al carrito. Body: { id, quantity }
+PATCH   /api/cart/:id           // Actualiza cantidad de un curso en el carrito. Body: { quantity }
+DELETE  /api/cart/:id           // Elimina un curso del carrito
+
+// Cursos
+GET     /api/cursos             // Devuelve todos los cursos
+GET     /api/cursos/:id         // Devuelve un curso por ID
+POST    /api/cursos             // Crea un nuevo curso. Body: { nombre, instructor, precio }
+PUT     /api/cursos/:id         // Actualiza un curso. Body: { nombre, instructor, precio }
+DELETE  /api/cursos/:id         // Elimina un curso
+
+// Cupones
+GET     /api/coupons            // Devuelve todos los cupones
+GET     /api/coupons/:id        // Devuelve un cupón por ID
+
+// Pagos (Stripe)
+POST    /api/checkout-session   // Crea una sesión de pago. Body: { amount, courseIds, userEmail }
+POST    /webhook                // Webhook de Stripe para pagos completados
+
+// Compras
+GET     /api/compras            // Devuelve todas las compras
+GET     /api/compras/:email     // Devuelve compras por email
+GET     /api/compras/:id        // Devuelve compra por ID
+
+// Especificaciones generales:
+// - Todos los endpoints devuelven JSON.
+// - Para POST/PATCH/PUT se espera body en formato JSON.
+// - Los modelos principales son: Curso, Carrito, Cupón, Compra.
+// - El webhook de Stripe debe validar la firma y guardar la compra si el pago es exitoso.
