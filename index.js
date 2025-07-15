@@ -217,6 +217,7 @@ app.post("/api/checkout-session", async (req, res) => {
       mode: "payment",
       success_url: "http://localhost:5173/success",
       cancel_url: "http://localhost:5173/cancel",
+      customer_email: userEmail,
       metadata: {
         course_ids: courseIds,
         user_email: userEmail,
@@ -257,7 +258,6 @@ app.post("/webhook", express.raw({ type: "application/json" }), (request, respon
     };
 
     compras.push(compra);
-
     console.log("✅ Compra guardada:", compra);
   }
 
