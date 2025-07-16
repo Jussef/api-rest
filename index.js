@@ -26,7 +26,8 @@ let cursos = [
     slug: "curso-python",
     price: 100,
     coupon: "DESCUENTO10",
-    description: "Aprende Python desde cero lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    description:
+      "Aprende Python desde cero lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
     img_path: "https://picsum.photos/id/5/900/400",
     is_generate_certificate: true,
     requirements_certificate: false,
@@ -44,7 +45,8 @@ let cursos = [
     slug: "curso-javascript",
     price: 120,
     coupon: "DESCUENTO20",
-    description: "Domina JavaScript y sus frameworks lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    description:
+      "Domina JavaScript y sus frameworks lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
     img_path: "https://picsum.photos/id/10/900/400",
     is_generate_certificate: true,
     requirements_certificate: false,
@@ -62,7 +64,8 @@ let cursos = [
     slug: "curso-react",
     price: 150,
     coupon: "DESCUENTO30",
-    description: "Construye aplicaciones con React lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    description:
+      "Construye aplicaciones con React lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
     img_path: "https://picsum.photos/id/15/900/400",
     is_generate_certificate: true,
     requirements_certificate: false,
@@ -72,7 +75,7 @@ let cursos = [
     updated_by_user_id: 1,
     created_at: new Date(),
     updated_at: new Date(),
-  }
+  },
 ];
 let cart = [];
 let coupons = [
@@ -93,7 +96,7 @@ let coupons = [
     code: "DESCUENTO30",
     discount: 30,
     is_active: true,
-  }
+  },
 ];
 let compras = [];
 
@@ -120,7 +123,7 @@ app.post("/api/cart", (req, res) => {
 
     const cartItem = {
       id: curso.id,
-      quantity: quantity || 1
+      quantity: quantity || 1,
     };
     cart.push(cartItem);
     res.status(201).json(cartItem);
@@ -144,6 +147,12 @@ app.patch("/api/cart/:id", (req, res) => {
 app.delete("/api/cart/:id", (req, res) => {
   cart = cart.filter((c) => c.id != req.params.id);
   res.json({ message: "Curso eliminado del carrito" });
+});
+app.post("/api/cart/clear", (req, res) => {
+  // Lógica para limpiar el carrito del usuario actual (por sesión o ID)
+  // Aquí puedes simularlo con una variable global o base de datos
+  carrito = [];
+  res.status(200).send("Carrito limpiado");
 });
 
 // Obtener todos los cursos
@@ -215,9 +224,10 @@ app.post("/api/checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: "http://localhost:5173/success",
+      success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: "http://localhost:5173/cancel",
-      customer_email: userEmail,
+      // customer_email: userEmail,
+      customer_creation: "if_required",
       metadata: {
         course_ids: courseIds,
         user_email: userEmail,
@@ -230,13 +240,33 @@ app.post("/api/checkout-session", async (req, res) => {
     res.status(500).send("Error al crear la sesión de pago");
   }
 });
+// Endpoint que devuelve los datos de la sesión de pago
+app.get("/api/checkout-session/:id", async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(req.params.id);
+
+    const userId = session.metadata.user_id;
+    const courseIds = session.metadata.course_ids.split(",");
+    const amountTotal = session.amount_total / 100;
+
+    res.json({
+      userId,
+      courseIds,
+      amountTotal,
+    });
+  } catch (error) {
+    console.error("Error obteniendo sesión:", error);
+    res.status(500).send("Error obteniendo datos de la sesión");
+  }
+});
+
 // Webhook de Stripe
 app.post("/webhook", express.raw({ type: "application/json" }), (request, response) => {
   const sig = request.headers["stripe-signature"];
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(request.body, sig, 'whsec_ea5889a3693956fec35d4edf316860d6d25c2aee43746ed88958368e687764ca');
+    event = stripe.webhooks.constructEvent(request.body, sig, "whsec_ea5889a3693956fec35d4edf316860d6d25c2aee43746ed88958368e687764ca");
   } catch (err) {
     console.error("⚠️  Webhook signature verification failed.", err.message);
     return response.status(400).send(`Webhook Error: ${err.message}`);
@@ -251,7 +281,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (request, respon
 
     const compra = {
       email: userEmail,
-      courses: courseIds.map(id => Number(id)),
+      courses: courseIds.map((id) => Number(id)),
       stripe_session_id: session.id,
       amount_total: amountTotal,
       paid_at: new Date().toISOString(),
@@ -266,7 +296,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (request, respon
 // Obtener compras por email
 app.get("/api/compras/:email", (req, res) => {
   const email = req.params.email;
-  const comprasUsuario = compras.filter(compra => compra.email === email);
+  const comprasUsuario = compras.filter((compra) => compra.email === email);
 
   if (comprasUsuario.length === 0) {
     return res.status(404).json({ message: "No se encontraron compras para este usuario." });
@@ -276,7 +306,7 @@ app.get("/api/compras/:email", (req, res) => {
 });
 // Obtener compras por ID
 app.get("/api/compras/:id", (req, res) => {
-  const compra = compras.find(compra => compra.id == req.params.id);
+  const compra = compras.find((compra) => compra.id == req.params.id);
 
   if (!compra) {
     return res.status(404).json({ message: "Compra no encontrada." });
@@ -288,9 +318,6 @@ app.get("/api/compras/:id", (req, res) => {
 app.get("/api/compras", (req, res) => {
   res.json(compras);
 });
-
-
-
 
 // Iniciar servidor
 app.listen(PORT, () => console.log(`✅ API corriendo en http://localhost:${PORT}`));
